@@ -1,19 +1,15 @@
 package com.gambling.websites.atptennis
 
 import org.jsoup.Jsoup
-import AtpTennisApi.BASE_URL
 import scala.collection.JavaConversions._
-import com.gambling.websites.atptennis.page.{RankingsPage, PlayerActivityPage}
+import com.gambling.websites.atptennis.page.{SitePaths, RankingsPage, PlayerActivityPage}
 import com.gambling.websites.atptennis.page.RankingsPage.PlayerRanking
-import org.jsoup.nodes.Document
-import org.jsoup.select.Elements
 import com.gambling.websites.atptennis.page.PlayerActivityPage.MatchResult
-import org.json.HTTP
 
 class AtpTennisApi {
 
     def getPlayerMatches(name: String): List[MatchResult] = {
-        val playerActivitiesPage = Jsoup.connect(s"$BASE_URL/Tennis/Players/Top-Players/$name.aspx?t=pa").get()
+        val playerActivitiesPage = Jsoup.connect(SitePaths.TOP_PLAYER_PROFILE(name)).get()
         val tournaments = playerActivitiesPage
             .select(".commonProfileContainer")
             .filter(PlayerActivityPage.isTournamentFragment)
@@ -29,7 +25,7 @@ class AtpTennisApi {
         //        val playerName = "Novak-Djokovic"
         //        val playerName = "John-Isner"
         //        val playerName = "Ryan-Harrison"
-        val playerActivitiesPage = Jsoup.connect(s"$BASE_URL/Tennis/Players/Top-Players/$playerName.aspx?t=pa").get()
+        val playerActivitiesPage = Jsoup.connect(SitePaths.TOP_PLAYER_PROFILE(playerName)).get()
         val tournaments = playerActivitiesPage
             .select(".commonProfileContainer")
             .filter(PlayerActivityPage.isTournamentFragment)
@@ -58,7 +54,7 @@ class AtpTennisApi {
     }
 
     def getSingleRankings: List[PlayerRanking] = {
-        val rankPage = Jsoup.connect(s"${BASE_URL}${RankingsPage.URI}").get()
+        val rankPage = Jsoup.connect(SitePaths.RANKING_SINGLES).get()
         RankingsPage.parseRankings(rankPage)
     }
 
@@ -68,9 +64,5 @@ class AtpTennisApi {
         // http://www.atpworldtour.com/Handlers/AutoComplete.aspx?q=nadald&_=1395349823522
         null
     }
-}
-
-object AtpTennisApi {
-    val BASE_URL = "http://www.atpworldtour.com"
 }
 
