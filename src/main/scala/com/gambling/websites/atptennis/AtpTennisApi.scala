@@ -2,11 +2,16 @@ package com.gambling.websites.atptennis
 
 import org.jsoup.Jsoup
 import scala.collection.JavaConversions._
-import com.gambling.websites.atptennis.page.{SitePaths, RankingsPage, PlayerActivityPage}
-import com.gambling.websites.atptennis.page.RankingsPage.PlayerRanking
+import com.gambling.websites.atptennis.page.{SitePaths, RankingPageParser, PlayerActivityPage}
 import com.gambling.websites.atptennis.page.PlayerActivityPage.MatchResult
+import com.rozky.common.http.client.{HttpClient, JsonHttpClient}
+import java.net.URLEncoder
+import com.gambling.websites.atptennis.domain.{PlayerRanking, PlayerNameAutoComplete}
 
 class AtpTennisApi {
+    
+    val httpClient: HttpClient = new JsonHttpClient
+    val rankingApi = new RankingApi
 
     def getPlayerMatches(name: String): List[MatchResult] = {
         val playerActivitiesPage = Jsoup.connect(SitePaths.TOP_PLAYER_PROFILE(name)).get()
@@ -53,16 +58,30 @@ class AtpTennisApi {
         println("count = " + count)
     }
 
-    def getSingleRankings: List[PlayerRanking] = {
+    def getSinglesRanking: List[PlayerRanking] = {
         val rankPage = Jsoup.connect(SitePaths.RANKING_SINGLES).get()
-        RankingsPage.parseRankings(rankPage)
+        RankingPageParser.getPlayerRankings(rankPage)
     }
 
-    def getPlayerId(name: String): String = {
+    def getPlayerId(name: String): Option[String] = {
+        val encodedName: String = URLEncoder.encode(name, "utf-8")
+        val response = httpClient.get[List[PlayerNameAutoComplete]](SitePaths.AUTO_COMPLETE(encodedName))
 
-//        HTTP
-        // http://www.atpworldtour.com/Handlers/AutoComplete.aspx?q=nadald&_=1395349823522
-        null
+        if (!response.isEmpty) {
+            if (response.size == 1) {
+                return Some(response.head.pid)
+            } else {
+                throw new IllegalArgumentException(s"expecting max 1 result but found ${response.size}")
+            }
+        }
+
+        None
     }
+
+    def getPlayerRanking(name: String): Option[Int] = {
+        None
+    }
+
+
 }
 
